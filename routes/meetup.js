@@ -6,6 +6,7 @@ const upload = require("../middleware/multer")
 
 router.post("/add-meetup",verifyJWT,upload.single('image'),meetupController.postMeetup);
 router.get("/get-meetup",verifyJWT, meetupController.getUserMeetups);
-router.get('/get-all-meetups',meetupController.getAllMeetups)
+router.get('/get-all-meetups', meetupController.getAllMeetups)
+router.get('/get-meetup-details')
 
 module.exports = router;
