@@ -1,9 +1,18 @@
 const Sequelize = require("sequelize");
 
-const sequelize = new Sequelize("node-com", "root", "J2cgnftw9810@#$", {
-  dialect: "mysql",
-    host: "localhost",
-  logging:console.log
-});
+if (process.env.JAWSDB_URL) {
+  const sequelize = new Sequelize(process.env.JAWSDB_URL);
+} else {
+  const sequelize = new Sequelize(
+    process.env.DB_NAME,
+    process.env.DB_USER,
+    process.env.DB_PASSWORD,
+    {
+      dialect: "mysql",
+      host: "localhost",
+      logging: process.env.NODE_ENV === "production" ? false : console.log,
+    }
+  );
+}
 
 module.exports = sequelize;
