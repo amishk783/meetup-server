@@ -31,6 +31,7 @@ app.use(cors());
 // app.use(session({ secret: "secret-key", resave: false, saveUninitialized: false ,store:sessionStore}));
 app.use(morgan("tiny"));
 
+
 app.use("/users", authRouter);
 app.use("/meetup", meetupRouter);
 
