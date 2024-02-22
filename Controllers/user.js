@@ -2,12 +2,27 @@ const bcrypt = require("bcrypt");
 
 const User = require("../Modals/User");
 const jwt = require("jsonwebtoken");
+const Token = require("../Modals/Token");
+
+const Joi = require("joi");
+
+const PORT = process.env.PORT || "http://localhost:3003";
 
 exports.postAddUser = async (req, res) => {
+  const schema = Joi.object({
+    enteredEmail: Joi.string().email().normalize().required(),
+    enteredPassword: Joi.string().required(),
+    enteredName: Joi.string().required(),
+  });
+  error = schema.validate(req.body).error;
+  if (error) return res.status(400).send({ message:error.details[0].message });
+  console.log(error);
+
   const name = req.body.enteredName;
   const email = req.body.enteredEmail;
   const password = req.body.enteredPassword;
-  console.log(email, password, name);
+
+  
   let newHashPassword;
   const exisitingUser = await User.findOne({ where: { email } });
   if (exisitingUser)
@@ -48,13 +63,11 @@ exports.verifyUser = async (req, res) => {
               { expiresIn: "1h" }
             );
             console.log(token);
-            return res
-              .status(200)
-              .json({
-                message: "successfull",
-                token,
-                user: { email: user.email, name: user.name },
-              }); // implement logout middleware
+            return res.status(200).json({
+              message: "successfull",
+              token,
+              user: { email: user.email, name: user.name },
+            }); // implement logout middleware
           } else {
             return res.status(204).json({ message: "Invalid Password" });
           }
@@ -68,5 +81,66 @@ exports.verifyUser = async (req, res) => {
     }
   } catch (err) {
     return res.send({ message: "failed" });
+  }
+};
+
+exports.refreshToken = async (req, res) => {
+  const token = req.body.token;
+  if (!token) return res.status(401).json({ message: "no token" });
+  jwt.verify(token, process.env.SECRET_KEY, (err, user) => {
+    if (err) return res.status(403).json({ message: "invalid token" });
+    const newToken = jwt.sign(
+      { userid: user.userid, username: user.username, email: user.email },
+      process.env.SECRET_KEY,
+      { expiresIn: "1h" }
+    );
+    res.json({ token: newToken });
+  });
+};
+
+exports.passwordReset = async (req, res) => {
+  console.log(req.body);
+  try {
+    const user = await User.findOne({ where: { email: req.body.email } });
+    console.log(user);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    console.log(user);
+    let token = await Token.findOne({ where: { userId: user.id } });
+    if (token) await token.destroy();
+    if (!token) {
+      const array = new Uint32Array(1);
+      const crypToken = crypto.getRandomValues(array).toString("hex");
+      token = await Token.create({
+        userId: user.id,
+        token: crypToken,
+      });
+    }
+    const link = `${PORT}/users/password-reset/${token.token}`;
+    // await sendEmail(user.email, "Password reset", link);
+    res.send({ message: "Password reset link sent to your email", link: link });
+  } catch (error) {
+    res.send("Something went wrong");
+    console.log(error);
+  }
+};
+
+exports.passwordResetToken = async (req, res) => {
+  try {
+    const user = await User.findOne({ where: { id: req.params.userId } });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const token = await Token.findOne({
+      where: { userId: user._id, token: req.params.token },
+    });
+    if (!token) return res.status(404).json({ message: "Invalid token" });
+    const saltRounds = 10;
+    const salt = await bcrypt.genSalt(saltRounds);
+    const newHashPassword = await bcrypt.hash(req.body.password, salt);
+    user.password = newHashPassword;
+    await user.save();
+    await token.destroy();
+    res.send({ message: "Password reset successful" });
+  } catch (error) {
+    res.send("Password reset failed");
   }
 };

@@ -7,14 +7,10 @@ const session = require("express-session");
 const sequelize = require("./util/database");
 const morgan = require("morgan");
 
-const SequelizeStore = require("express-session-sequelize")(session.Store);
-
 require("dotenv").config();
 
 const authRouter = require("./routes/auth");
 const meetupRouter = require("./routes/meetup");
-const meetupController = require("./Controllers/meetup");
-const verifyJWT = require("./middleware/verifyJWT");
 const User = require("./Modals/User");
 const Meetup = require("./Modals/Meetup");
 const { default: helmet } = require("helmet");
@@ -28,9 +24,7 @@ app.use(compression());
 app.use(bodyParser.json());
 
 app.use(cors());
-// app.use(session({ secret: "secret-key", resave: false, saveUninitialized: false ,store:sessionStore}));
 app.use(morgan("tiny"));
-
 
 app.use("/users", authRouter);
 app.use("/meetup", meetupRouter);
@@ -45,7 +39,6 @@ User.hasMany(Meetup);
 sequelize
   .sync() //{force:true}
   .then((result) => {
-    // console.log(result);
     const server = http.createServer(app);
     const PORT = process.env.PORT || 3003;
     server.listen(PORT);

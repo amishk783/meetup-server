@@ -5,9 +5,13 @@ const verifyJWT = (req, res, next) => {  // implement refresh and check the unsu
     if (token) {
         console.log(token);
         jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
-            if (err) return res.json({
-                message: 'Failed tp Authenticate'
-            })
+            if (err) {
+                console.log(err);
+                return res.json({
+                
+                    message: 'Failed tp Authenticate'
+                })
+            }
             console.log("verified")
             req.user = {};
             // console.log(decoded)

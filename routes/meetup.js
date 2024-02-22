@@ -12,7 +12,7 @@ router.post(
 );
 router.get("/get-meetups", verifyJWT, meetupController.getUserMeetups);
 router.get("/get-all-meetups", meetupController.getAllMeetups);
-// router.post('/get-meetup', verifyJWT, meetupController.getMeetup);
+
 router.post("/get-meetup", meetupController.getMeetup);
 router.post("/delete-meetup", verifyJWT, meetupController.deleteMeetup);
 router.put(
