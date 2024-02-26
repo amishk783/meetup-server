@@ -15,8 +15,8 @@ exports.postAddUser = async (req, res) => {
     enteredName: Joi.string().required(),
   });
   error = schema.validate(req.body).error;
-  if (error) return res.status(400).send({ message:error.details[0].message });
   console.log(error);
+  if (error) return res.status(400).send({ message:error.details[0].message });
 
   const name = req.body.enteredName;
   const email = req.body.enteredEmail;
