@@ -8,7 +8,7 @@ const Meetup = sequelize.define("meetup", {
     primaryKey: true,
     autoIncrement: true,
   },
-  name: {
+  title: {
     type: Sequelize.STRING,
     allowNull: false,
   },
@@ -21,10 +21,14 @@ const Meetup = sequelize.define("meetup", {
     allowNull: false,
   },
   date: {
-      type: Sequelize.STRING,
-      allowNull: false,
+    type: Sequelize.STRING,
+    allowNull: false,
   },
   image: {
+    type: Sequelize.STRING,
+    allowNull: false,
+  },
+  hostBy: {
     type: Sequelize.STRING,
     allowNull: false,
   },

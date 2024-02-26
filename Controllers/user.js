@@ -39,7 +39,7 @@ exports.postAddUser = async (req, res) => {
     { userid: user.id, username: name, email: email },
     process.env.SECRET_KEY,
     { expiresIn: "1h" }
-  );
+  ); 
   res.json({
     message: "User created successfully",
     token,
@@ -47,6 +47,14 @@ exports.postAddUser = async (req, res) => {
   });
 };
 exports.verifyUser = async (req, res) => {
+
+  const schema = Joi.object({
+    enteredEmail: Joi.string().email().normalize().required(),
+    enteredPassword: Joi.string().required(),
+  });
+  error = schema.validate(req.body).error;
+  if(error) return res.status(400).send({ message:error.details[0].message });  
+
   const email = req.body.enteredEmail;
   const password = req.body.enteredPassword;
 
@@ -60,7 +68,7 @@ exports.verifyUser = async (req, res) => {
             const token = jwt.sign(
               { userid: user.id, username: user.name, email: user.email },
               process.env.SECRET_KEY,
-              { expiresIn: "1h" }
+              { expiresIn: "3000" }
             );
             console.log(token);
             return res.status(200).json({

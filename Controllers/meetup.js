@@ -1,31 +1,40 @@
-
 const Meetup = require("../Modals/Meetup");
 const User = require("../Modals/User");
+
+const Joi = require("joi");
 const uploadOnCloudinary = require("../util/cloudinary");
 
 exports.postMeetup = async (req, res) => {
-  console.log(req.file);
+  const schema = Joi.object({
+    enteredName: Joi.string().required(),
+    enteredAddress: Joi.string().required(),
+    enteredDescription: Joi.string().required(),
+    date: Joi.string().required(),
+  });
+  const { error } = schema.validate(req.body);
+  if (error) {
+    return res.status(400).send({ message: error.details[0].message });
+  }
 
   try {
     const takenEmail = req.user.email;
     const { enteredName, enteredAddress, enteredDescription, date } = req.body;
 
     const imageLocalPath = req.file.path;
-    console.log(imageLocalPath);
 
     const uploadImage = await uploadOnCloudinary(imageLocalPath);
-    console.log(uploadImage);
 
     const url = uploadImage.secure_url;
 
     if (takenEmail) {
       const user = await User.findOne({ where: { email: takenEmail } });
       const meetup = await user.createMeetup({
-        name: enteredName,
+        title: enteredName,
         address: enteredAddress,
         description: enteredDescription,
         image: url,
         date: date,
+        hostBy: user.name,
       });
       console.log("created meetup successfully");
       res.status(200).json({ message: "Meetup created successfully", meetup });
@@ -38,7 +47,6 @@ exports.postMeetup = async (req, res) => {
 
 exports.getUserMeetups = async (req, res) => {
   try {
-    console.log(req.user.email);
     const user = await User.findOne({ where: { email: req.user.email } });
     const meetup = await user.getMeetups();
 
@@ -67,7 +75,6 @@ exports.getMeetup = async (req, res) => {
   console.log(req.body);
   try {
     console.log(req.body);
-    const { id } = req.body;
     console.log(id);
     const meetup = await Meetup.findOne({ where: { id } });
     console.log(meetup);
@@ -79,7 +86,13 @@ exports.getMeetup = async (req, res) => {
   }
 };
 exports.deleteMeetup = async (req, res) => {
-  console.log(req.body);
+  const schema = Joi.object({
+    id: Joi.number().required(),
+  });
+  const { error } = schema.validate(req.body);
+  if (error) {
+    return res.status(400).send({ message: error.details[0].message });
+  }
   try {
     const meetupIdToDelete = req.body.id;
     console.log(meetupIdToDelete);
@@ -100,6 +113,17 @@ exports.deleteMeetup = async (req, res) => {
   }
 };
 exports.editMeetup = async (req, res) => {
+  const schema = Joi.object({
+    enteredName: Joi.string().required(),
+    enteredAddress: Joi.string().required(),
+    enteredDescription: Joi.string().required(),
+    date: Joi.string().required(),
+  });
+  const { error } = schema.validate(req.body);
+  if (error) {
+    return res.status(400).send({ message: error.details[0].message });
+  }
+
   const meetupIdToEdit = req.params.id;
   console.log(meetupIdToEdit);
   try {
@@ -112,7 +136,7 @@ exports.editMeetup = async (req, res) => {
     }
     const uploadImage = await uploadOnCloudinary(imageLocalPath);
     const url = uploadImage.secure_url;
-    meetupToEdit.name = enteredName;
+    meetupToEdit.title = enteredName;
     meetupToEdit.address = enteredAddress;
     meetupToEdit.description = enteredDescription;
     meetupToEdit.date = date;
