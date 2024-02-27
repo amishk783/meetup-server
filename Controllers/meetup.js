@@ -1,6 +1,8 @@
 const Meetup = require("../Modals/Meetup");
 const User = require("../Modals/User");
 
+const fileHelper = require("../util/file");
+
 const Joi = require("joi");
 const uploadOnCloudinary = require("../util/cloudinary");
 
@@ -36,6 +38,7 @@ exports.postMeetup = async (req, res) => {
         date: date,
         hostBy: user.name,
       });
+      fileHelper.deleteFile(imageLocalPath);
       console.log("created meetup successfully");
       res.status(200).json({ message: "Meetup created successfully", meetup });
     }
@@ -50,9 +53,7 @@ exports.getUserMeetups = async (req, res) => {
     const user = await User.findOne({ where: { email: req.user.email } });
     const meetup = await user.getMeetups();
 
-    console.log(meetup);
-
-    res.send({ message: "Succesfull", allmeetup: meetup });
+    res.status(200).send({ message: "Succesfull", meetup });
   } catch (error) {
     console.log(error);
     res.status(500).json("messsage:Something went wrong");
@@ -73,15 +74,18 @@ exports.getAllMeetups = async (req, res) => {
 };
 exports.getMeetup = async (req, res) => {
   console.log(req.body);
+
   try {
-    console.log(req.body);
+    const id = req.params.id;
     console.log(id);
-    const meetup = await Meetup.findOne({ where: { id } });
-    console.log(meetup);
+
+    const meetup = await Meetup.findOne({ where: { id: id } });
+    console.log("meetup" + meetup);
     res
       .status(200)
       .send({ message: "found meetup successfully", meetup: meetup });
   } catch (error) {
+    console.log(error);
     res.status(303).send("Something went wrong");
   }
 };
@@ -125,7 +129,7 @@ exports.editMeetup = async (req, res) => {
   }
 
   const meetupIdToEdit = req.params.id;
-  console.log(meetupIdToEdit);
+
   try {
     const { enteredName, enteredAddress, enteredDescription, date } = req.body;
     const imageLocalPath = req.file.path;
@@ -134,6 +138,7 @@ exports.editMeetup = async (req, res) => {
     if (!meetupToEdit) {
       res.status(404).send({ message: "Meetup not found" });
     }
+
     const uploadImage = await uploadOnCloudinary(imageLocalPath);
     const url = uploadImage.secure_url;
     meetupToEdit.title = enteredName;

@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const User = require("../Modals/User");
 const jwt = require("jsonwebtoken");
 const Token = require("../Modals/Token");
+const sendEmail = require("../util/sendEmail");
 
 const Joi = require("joi");
 
@@ -16,13 +17,12 @@ exports.postAddUser = async (req, res) => {
   });
   error = schema.validate(req.body).error;
   console.log(error);
-  if (error) return res.status(400).send({ message:error.details[0].message });
+  if (error) return res.status(400).send({ message: error.details[0].message });
 
   const name = req.body.enteredName;
   const email = req.body.enteredEmail;
   const password = req.body.enteredPassword;
 
-  
   let newHashPassword;
   const exisitingUser = await User.findOne({ where: { email } });
   if (exisitingUser)
@@ -39,7 +39,7 @@ exports.postAddUser = async (req, res) => {
     { userid: user.id, username: name, email: email },
     process.env.SECRET_KEY,
     { expiresIn: "1h" }
-  ); 
+  );
   res.json({
     message: "User created successfully",
     token,
@@ -47,13 +47,12 @@ exports.postAddUser = async (req, res) => {
   });
 };
 exports.verifyUser = async (req, res) => {
-
   const schema = Joi.object({
     enteredEmail: Joi.string().email().normalize().required(),
     enteredPassword: Joi.string().required(),
   });
   error = schema.validate(req.body).error;
-  if(error) return res.status(400).send({ message:error.details[0].message });  
+  if (error) return res.status(400).send({ message: error.details[0].message });
 
   const email = req.body.enteredEmail;
   const password = req.body.enteredPassword;
@@ -110,9 +109,9 @@ exports.passwordReset = async (req, res) => {
   console.log(req.body);
   try {
     const user = await User.findOne({ where: { email: req.body.email } });
-    console.log(user);
+    // console.log(user);
     if (!user) return res.status(404).json({ message: "User not found" });
-    console.log(user);
+    // console.log(user);
     let token = await Token.findOne({ where: { userId: user.id } });
     if (token) await token.destroy();
     if (!token) {
@@ -123,8 +122,8 @@ exports.passwordReset = async (req, res) => {
         token: crypToken,
       });
     }
-    const link = `${PORT}/users/password-reset/${token.token}`;
-    // await sendEmail(user.email, "Password reset", link);
+    const link = `${PORT}/users/password-reset/${user.id}/${token.token}`;
+    await sendEmail(user.email, "Password reset", link);
     res.send({ message: "Password reset link sent to your email", link: link });
   } catch (error) {
     res.send("Something went wrong");
@@ -133,14 +132,16 @@ exports.passwordReset = async (req, res) => {
 };
 
 exports.passwordResetToken = async (req, res) => {
+  console.log(req.params.userId, req.params.token, req.body.password);
   try {
     const user = await User.findOne({ where: { id: req.params.userId } });
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const token = await Token.findOne({
-      where: { userId: user._id, token: req.params.token },
+      where: { userId: user.id, token: req.params.token },
     });
-    if (!token) return res.status(404).json({ message: "Invalid token" });
+
+    // if (!token) return res.status(404).json({ message: "Invalid token" });
     const saltRounds = 10;
     const salt = await bcrypt.genSalt(saltRounds);
     const newHashPassword = await bcrypt.hash(req.body.password, salt);

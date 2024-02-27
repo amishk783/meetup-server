@@ -3,7 +3,7 @@ const http = require("http");
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const session = require("express-session");
+
 const sequelize = require("./util/database");
 const morgan = require("morgan");
 
@@ -40,7 +40,7 @@ sequelize
   .sync() //{force:true}
   .then((result) => {
     const server = http.createServer(app);
-    const PORT = process.env.PORT || 3003;
+    const PORT = process.env.PORT || 3004;
     server.listen(PORT);
   })
   .catch((err) => {

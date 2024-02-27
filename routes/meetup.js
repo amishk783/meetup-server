@@ -4,6 +4,7 @@ const router = express.Router();
 const meetupController = require("../Controllers/meetup");
 const upload = require("../middleware/multer");
 
+
 router.post(
   "/add-meetup",
   verifyJWT,
@@ -13,7 +14,7 @@ router.post(
 router.get("/get-meetups", verifyJWT, meetupController.getUserMeetups);
 router.get("/get-all-meetups", meetupController.getAllMeetups);
 
-router.post("/get-meetup", meetupController.getMeetup);
+router.get("/get-meetup/:id", meetupController.getMeetup);
 router.post("/delete-meetup", verifyJWT, meetupController.deleteMeetup);
 router.put(
   "/edit-meetup/:id",
