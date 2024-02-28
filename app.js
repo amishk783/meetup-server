@@ -40,7 +40,7 @@ sequelize
   .sync() //{force:true}
   .then((result) => {
     const server = http.createServer(app);
-    const PORT = process.env.PORT || 3004;
+    const PORT = process.env.PORT || 3003;
     server.listen(PORT);
   })
   .catch((err) => {
