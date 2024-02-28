@@ -7,8 +7,9 @@ const sendEmail = require("../util/sendEmail");
 
 const Joi = require("joi");
 
-const PORT =
-  "https://meetup-frontend-byy3.onrender.com" || "http://localhost:3000";
+const PORT = process.env.PORT
+  ? "https://meetup-frontend-byy3.onrender.com"
+  : "http://localhost:3000";
 
 exports.postAddUser = async (req, res) => {
   const schema = Joi.object({
@@ -124,6 +125,7 @@ exports.passwordReset = async (req, res) => {
       });
     }
     const link = `${PORT}/forgotpassword/${user.id}/${token.token}`;
+    console.log(PORT);
     await sendEmail(user.email, "Password reset", link);
     res.send({ message: "Password reset link sent to your email", link: link });
   } catch (error) {
