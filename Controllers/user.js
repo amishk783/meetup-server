@@ -1,11 +1,11 @@
 const bcrypt = require("bcrypt");
+const Joi = require("joi");
 
 const User = require("../Modals/User");
 const jwt = require("jsonwebtoken");
 const Token = require("../Modals/Token");
 const sendEmail = require("../util/sendEmail");
 
-const Joi = require("joi");
 
 const PORT = process.env.PORT
   ? "https://meetup-frontend-byy3.onrender.com"
@@ -151,6 +151,7 @@ exports.passwordResetToken = async (req, res) => {
     });
 
     if (!token) return res.status(404).json({ message: "Invalid token" });
+    
     const saltRounds = 10;
     const salt = await bcrypt.genSalt(saltRounds);
     const newHashPassword = await bcrypt.hash(req.body.password, salt);

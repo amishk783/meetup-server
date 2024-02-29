@@ -1,14 +1,14 @@
 const Meetup = require("../Modals/Meetup");
 const User = require("../Modals/User");
+const Joi = require("joi");
 
 const fileHelper = require("../util/file");
 
-const Joi = require("joi");
 const uploadOnCloudinary = require("../util/cloudinary");
 
 exports.postMeetup = async (req, res) => {
   const schema = Joi.object({
-    enteredName: Joi.string().required(),
+    enteredTitle: Joi.string().required(),
     enteredAddress: Joi.string().required(),
     enteredDescription: Joi.string().required(),
     date: Joi.string().required(),
@@ -20,9 +20,10 @@ exports.postMeetup = async (req, res) => {
 
   try {
     const takenEmail = req.user.email;
-    const { enteredName, enteredAddress, enteredDescription, date } = req.body;
-
+    const { enteredTitle, enteredAddress, enteredDescription, date } = req.body;
+    console.log(enteredAddress,enteredDescription,enteredTitle,date)
     const imageLocalPath = req.file.path;
+    console.log(imageLocalPath);
 
     const uploadImage = await uploadOnCloudinary(imageLocalPath);
 
@@ -31,7 +32,7 @@ exports.postMeetup = async (req, res) => {
     if (takenEmail) {
       const user = await User.findOne({ where: { email: takenEmail } });
       const meetup = await user.createMeetup({
-        title: enteredName,
+        title: enteredTitle,
         address: enteredAddress,
         description: enteredDescription,
         image: url,
